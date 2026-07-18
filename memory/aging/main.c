@@ -1,32 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <limits.h>
-#include <stdbool.h>
+#include "../shared/includes.h"
 
 /*
     This implementation is not really efficient.
-    We are "walking the page table" buts its just an array, and while walking it we are running aging (as to not loop twice :D).
 */
 
-typedef struct pageFrame
-{
-    int virtualPage;
-    bool referenced;
-    __uint8_t age;
-} pageFrame;
-
-typedef struct virtualPage
-{
-    bool isPresent;
-    size_t assignedFrame;
-} virtualPage;
-
 static const int AGING_INTERVAL = 100;
-
-static const char PAGE_REFERENCES_PATH[] = "page_references.txt";
-
-static const size_t virtualPageCount = 256; // 0-255;
 
 size_t pageReferenceCount = 0;
 int pageFrameCount = -1;
