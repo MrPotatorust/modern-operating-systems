@@ -3,6 +3,12 @@
 /*
     This implementation is not really efficient.
 */
+typedef struct pageFrame
+{
+    int virtualPage;
+    bool referenced;
+    __uint8_t age;
+} pageFrame;
 
 static const int AGING_INTERVAL = 100;
 
@@ -64,6 +70,8 @@ int main(int argc, char const *argv[])
 {
 
     unsigned long long int totalPageFaults = 0; // Overkill is fun
+    int exitStatus = 0;
+    FILE *fptr = NULL;
 
     if (argc != 2)
     {
@@ -111,27 +119,27 @@ int main(int argc, char const *argv[])
     if (populateVirtualPages() > 0)
     {
         printf("Could not allocate virtual pages \n");
-        return 1;
+        exitStatus = 1;
+        goto cleanup;
     }
 
     //? Populate pageFrames
     if (populatePageFrames(pageFrameCount) > 0)
     {
         printf("Could not allocate page frames \n");
-        return 1;
+        exitStatus = 1;
+        goto cleanup;
     }
 
     //? Parse references from file and instantly run them
-    FILE *fptr;
     fptr = fopen(PAGE_REFERENCES_PATH, "r");
 
     if (fptr == NULL)
     {
         printf("Could not open page references txt file");
-        return 1;
+        exitStatus = 1;
+        goto cleanup;
     }
-
-    fptr = fopen(PAGE_REFERENCES_PATH, "r");
 
     while (!feof(fptr))
     {
@@ -142,14 +150,15 @@ int main(int argc, char const *argv[])
         bool wasAssigned = false;
 
         //? Executes a tick every ~20ms (simulated) and runs aging
-        if (pageReferenceCount == 100)
+        if (pageReferenceCount == AGING_INTERVAL)
         {
             executeTick();
         }
         if (fscanf(fptr, "%d\n", &curVirtualPageOffset) != 1)
         {
             printf("Something went wrong when reading file, count not read value \n");
-            return 1;
+            exitStatus = 1;
+            goto cleanup;
         };
 
         ++pageReferenceCount;
@@ -208,5 +217,13 @@ int main(int argc, char const *argv[])
 
     printf("Total page faults: %llu\n", totalPageFaults);
 
-    return 0;
+cleanup:
+    if (fptr != NULL)
+    {
+        fclose(fptr);
+    }
+    free(virtualPages);
+    free(pageFrames);
+
+    return exitStatus;
 }

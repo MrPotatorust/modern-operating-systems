@@ -4,12 +4,6 @@
 #include <limits.h>
 #include <stdbool.h>
 
-typedef struct pageFrame
-{
-    int virtualPage;
-    bool referenced;
-    __uint8_t age;
-} pageFrame;
 
 typedef struct virtualPage
 {
